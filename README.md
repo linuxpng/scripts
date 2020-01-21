@@ -1,7 +1,7 @@
 # Some work scripts
 * case_cleanup.sh - A simple script to delete old customer data
 * getcase2 - Grabs attachments from the portal bypassing tokenization from AWS
-* getcase3 - Grabs attachments from the portal and uses aria2 for parallel downloads and multiple connectoins per download
+* getcase3 - Grabs attachments from the portal and uses aria2 for parallel downloads and multiple connections per download
 * kdump-checker - Prints out information related to a customer's kdump configuration
 * oracle-checker - Looks at values and makes suggestions based upon our tuning guide
 * rca - The base script that will call kdump-checker and sar-checker
