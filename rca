@@ -14,7 +14,7 @@ echo Hostname:
 echo ---------
 echo $ cat hostname
 cat hostname
-echo 
+echo
 echo
 echo Red Hat Enterprise Linux Version:
 echo ---------------------------------
@@ -63,7 +63,7 @@ if [ -z "$mockbuild" ]
 then
         echo No mockbuild found in messages, not continuing
 else
-	grep -i mockbuild var/log/messages | head -n1
+	grep -i mockbuild var/log/messages* | head -n1
 fi
 
 echo
@@ -75,8 +75,8 @@ if [ -z "$mockbuild" ]
 then
         echo No mockbuild found in messages, not continuing
 else
-	echo $ grep -B 20 mockbuild var/log/messages
-	grep -B 20 mockbuild var/log/messages
+	echo $ grep -B 20 mockbuild var/log/messages*
+	grep -B 20 mockbuild var/log/messages*
 fi
 #$sarchecker
 echo
@@ -87,7 +87,7 @@ if [ "$isoracle" -eq 0 ]
 then
 	echo No Oracle processes found
 else
-	echo Oracle processes found. 
+	echo Oracle processes found.
 	echo
 	echo
 	echo Tuning details:
