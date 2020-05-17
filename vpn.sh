@@ -15,7 +15,7 @@ if [ -z "$vpnup" ]
 then
 	echo $user > $homedir/pass.txt
 	echo $pin$token >> $homedir/pass.txt
-	sudo openvpn --client --config $homedir/$confg --auth-user-pass $homedir/pass.txt --setenv PATH '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' --script-security 2 --up /etc/openvpn/update-resolv-conf --down /etc/openvpn/update-resolv-conf --down-pre
+	sudo openvpn --client --config $homedir/$config --auth-user-pass $homedir/pass.txt --setenv PATH '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' --script-security 2 --up /etc/openvpn/update-resolv-conf --down /etc/openvpn/update-resolv-conf --down-pre
 else
 	:
 fi
