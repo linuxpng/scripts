@@ -3,6 +3,7 @@
 # Create a TOTP token and read the secret using a QR code scanner, this will be <yoursecret>
 # You can optionally stick this in cron or wrap it in a 'while do' loop if you want to keep it running in a tmux session like I do
 # If your connection relies on a CA SSL certificate install that first with update-ca-certificates
+# Use the update-resolv-conf_RH file in /etc/openvpn/ for Red Hat EL or CentOS
 
 token=$(oathtool --base32 --totp <yoursecret>)
 pin=<yourpin>
