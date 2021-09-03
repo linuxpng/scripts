@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# v0.3 - 20181128
+# Added ability to get individual attachments
+#
+# v0.2 - 20181113
+# Switch to portal attachments with move to GDPR
+#
+# v0.1 - 20180423
+# "Reinventing the wheel" Steve Barcomb (sbarcomb@redhat.com)
+# You will need to set up an ssh key ssh-keygen -t rsa 
+# Then copy the key to the phx server 'ssh-copy-id s01.gss.hst.phx2.redhat.com'
+# Make sure to edit the dir and user values below
+
+
+caseno=$1
+filename=$2
+casenolen=$(echo -n $caseno | wc -m)
+dir=
+user=
+password=
+
+if [ $casenolen = 8 ]
+then
+
+	if [ ! -d $dir/$caseno ]
+	then
+		echo Creating case directory:
+		mkdir $dir/$caseno
+		touch $dir/$caseno/.uuids
+	fi
+
+	wget -q --show-progress --user $user --password $password https://access.redhat.com/rs/cases/$caseno/attachments -O $dir/$caseno/attachments &> /dev/null
+	grep -e uuid -e fileName $dir/$caseno/attachments | cut -c 9- | sed s/\<uuid\>// | sed s/\<fileName\>// | sed s/\<.*// | awk '{printf "%s%s",$0,(NR%2?FS:RS)}' |  sed 's/\(.\{9\}\)\([^ ]*\) *\([^ ]*\)\(.*\)/\1\2 \1\3 \4/'> $dir/$caseno/.files
+	cat $dir/$caseno/.files | awk '{print $1}' > $dir/$caseno/.new_uuids
+	sort $dir/$caseno/.uuids $dir/$caseno/.new_uuids | uniq -u > $dir/$caseno/.diff
+
+	if [ -z "$filename" ] 
+	then
+		if [ ! -s $dir/$caseno/.diff ]
+		then
+			echo No files to download.
+		else	
+			echo Downloading new files: $dir/$caseno
+			while read -r r;do wget -q --show-progress --user $user --password $password https://access.redhat.com/rs/cases/$caseno/attachments/"$r" -P $dir/$caseno;done < $dir/$caseno/.diff 
+			cat $dir/$caseno/.diff >> $dir/$caseno/.uuids
+			cd $dir/$caseno; awk 'system("mv " $1 " " $2)' $dir/$caseno/.files &>/dev/null
+		fi
+	else
+		grep $filename $dir/$caseno/attachments &>/dev/null
+
+		if [ $? -eq 0 ]
+		then	
+			echo Dowloading $filename to $dir/$caseno
+			single=$(grep $filename $dir/$caseno/.files | awk '{print $1}')
+			wget -q --show-progress --user $user --password $password https://access.redhat.com/rs/cases/$caseno/attachments/"$single" -P $dir/$caseno
+			prefix=$(echo $single | cut -c -9)
+			mv $dir/$caseno/$single $dir/$caseno/$prefix$filename
+		
+			grep $single $dir/$caseno/.uuids &>/dev/null
+			if [ $? -eq 0 ]
+			then
+				exit 0
+			else
+				echo $single >> $dir/$caseno/.uuids
+			fi
+		else
+			echo $filename not found attached to $caseno
+		fi	
+	fi
+else
+	echo "Command Syntax:"
+	echo "   caseget <casenumber> <attachment>"
+	echo
+	echo "If no attachment is provided all attachments will be downloaded"
+fi

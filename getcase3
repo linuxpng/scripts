@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+# Steve Barcomb (sbarcomb@redhat.com)
+# aria2c allows for multiple simultaneous downloads as well as multiple sockets per download.  This can be very fast.  
+# aria2c also checks for complete downloads and will ignore those.  If the download is partially completed it will resume it.
+
+
+caseno=$1
+filename=$2
+casenolen=$(echo -n $caseno | wc -m)
+dir=
+user=
+passwd=
+aria=$(command -v aria2c)
+
+# Check to make sure the case number contains 8 digits
+
+if [ "$casenolen" -ne 8 ]
+then
+	echo "Please enter a valid case number.  You may also download individual attachments as getcase3 <caseno> <attachment>"
+	exit 1
+else
+	:
+fi
+
+
+# Check for the presence of the aria2c binary
+
+if [ -z $aria ]
+then
+	echo Please install aria2
+else
+	mkdir $dir/$caseno
+	echo Downloading files to $dir/$caseno
+fi
+
+# Get a listing of all of the attachments on the ticket and save it in your case directory
+
+aria2c --console-log-level=error --allow-overwrite=true --http-user $user --http-passwd $passwd -d $dir/$caseno https://access.redhat.com/rs/cases/$caseno/attachments
+
+
+
+# Check to see if a filename was passed to the script.  If it was, only download that file.  If no arguments are given grab all files
+
+if [ -z $filename ]
+then
+        grep uri $dir/$caseno/attachments |  sed -e 's|^[ \t]*||' | sed -e 's|<uri>||g' | sed -e 's|</uri>||g' > $dir/$caseno/.attachments_cleaned
+        aria2c -x 16 -j 16 --console-log-level=error --force-save=true --allow-overwrite=false --summary-interval 0 -d $dir/$caseno --http-user $user --http-passwd $passwd -i $dir/$caseno/.attachments_cleaned
+else
+        single=$(grep -B 1 "<fileName>$filename" $dir/$caseno/attachments | head -n1 | sed -e 's|^[ \t]*||' | sed -e 's|<uri>||g' | sed -e 's|</uri>||g')
+        aria2c -x 16 -j 16 --console-log-level=error --force-save=true --allow-overwrite=false --summary-interval 0 -d $dir/$caseno --http-user $user --http-passwd $passwd $single
+fi

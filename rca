@@ -1,0 +1,98 @@
+#!/bin/bash
+# Steve Barcomb (sbarcomb@redhat.com)
+
+kdumpchecker="/usr/local/bin/kdump-checker.sh"
+sarchecker="/usr/local/bin/sar-checker.sh"
+oraclechecker="/usr/local/bin/oracle-checker.sh"
+
+isoracle=$(grep ora_ ps | wc -l)
+
+mockbuild=$(grep -i mockbuild var/log/messages | sort -u)
+echo
+echo
+echo Hostname:
+echo ---------
+echo $ cat hostname
+cat hostname
+echo
+echo
+echo Red Hat Enterprise Linux Version:
+echo ---------------------------------
+echo $ cat etc/redhat-release
+cat etc/redhat-release
+echo
+echo
+echo Date that the sosreport was collected:
+echo --------------------------------------
+echo $ cat date
+cat date
+echo
+echo
+echo Uptime output:
+echo --------------
+echo $ cat uptime
+cat uptime
+echo
+echo
+echo Hardware type:
+echo --------------
+echo $ grep -A 2 "System Information" dmidecode
+grep -A 2 "System Information" dmidecode
+echo
+echo
+hardware=$(grep -A 2 "System Information" dmidecode | grep HP | awk '{print $2}')
+if [[ $hardware == "HP" ]]
+then
+	echo HP Health is installed:
+	echo -----------------------
+	grep hp-health installed-rpms
+	echo
+	echo
+	echo Read the IML:
+	echo -------------------------------
+	echo hpasmcli -s "show asr"
+	echo hpasmcli -s "show iml"
+	echo
+	echo
+fi
+
+echo Checking for kernel build server information:
+echo ---------------------------------------------
+
+if [ -z "$mockbuild" ]
+then
+        echo No mockbuild found in messages, not continuing
+else
+	grep -i mockbuild var/log/messages* | head -n1
+fi
+
+echo
+echo
+echo Grabbing /var/log/messages data prior to the reboot:
+echo ----------------------------------------------------
+
+if [ -z "$mockbuild" ]
+then
+        echo No mockbuild found in messages, not continuing
+else
+	echo $ grep -B 20 mockbuild var/log/messages*
+	grep -B 20 mockbuild var/log/messages*
+fi
+#$sarchecker
+echo
+echo
+echo Checking for Oracle workload:
+echo -----------------------------
+if [ "$isoracle" -eq 0 ]
+then
+	echo No Oracle processes found
+else
+	echo Oracle processes found.
+	echo
+	echo
+	echo Tuning details:
+	$oraclechecker
+fi
+echo
+
+#$kdumpchecker
